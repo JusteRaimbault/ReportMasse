@@ -1,0 +1,54 @@
+extensions [table]
+
+
+to setup:setup
+  
+  if global:headless? != true [ca]
+  
+  setup:setup-globals
+  
+  setup:setup-indicators
+  
+  reset-ticks
+  
+end
+
+
+;;
+; hardcoded parameters
+to setup:setup-globals
+  
+  set global:boarding-users-per-minute 1000 ; for a MI09, boarding ~ 2600 users takes 1min30 at peak time 
+  
+  set global:alternative-modes (list "m1" "bus" "bike" "taxi" "walking")
+  
+  set global:alternative-modes-arrival-rates table:make
+  table:put global:alternative-modes-arrival-rates "m1" 50
+  table:put global:alternative-modes-arrival-rates "bus" 20
+  table:put global:alternative-modes-arrival-rates "bike" 10 
+  table:put global:alternative-modes-arrival-rates "taxi" 10
+  table:put global:alternative-modes-arrival-rates "walking" 20 
+  
+  set global:alternative-modes-capacities table:make
+  table:put global:alternative-modes-capacities "m1" 3500 ; 700 per train x 5 trains on the segment
+  table:put global:alternative-modes-capacities "bus" 1000 ; 100 per bus x 10 bus
+  table:put global:alternative-modes-capacities "bike" 100 ; 
+  table:put global:alternative-modes-capacities "taxi" 30 ; 
+  table:put global:alternative-modes-capacities "walking" 100000 ; ~ infinite 
+  
+  set global:alternative-modes-speed table:make
+  table:put global:alternative-modes-speed "m1" 0.1 ; 10min for the segment 
+  table:put global:alternative-modes-speed "bus" 0.033 ; 30 min
+  table:put global:alternative-modes-speed "bike" 0.033 ; 
+  table:put global:alternative-modes-speed "taxi" 0.033 ; 
+  table:put global:alternative-modes-speed "walking" 0.0166 ; 1h
+  
+  
+end
+
+
+to setup:setup-indicators
+  set global:effective-travel-times []
+  set global:effective-congestion []
+  set global:arrived-users 0
+end

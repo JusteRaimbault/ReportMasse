@@ -1,0 +1,59 @@
+
+;;
+; user functions
+
+
+to users:arrive-new-users
+  
+  create-users random-poisson global:rer-users-arrival-rate [
+    user:new-rer-user
+  ]
+  
+  foreach global:alternative-modes [ mode ->
+    create-users random-poisson (table:get global:alternative-modes-arrival-rates mode) [
+      user:new-user-mode mode
+    ]
+  ]
+  
+end
+
+
+to users:board-rer
+  let waiting count users with [user:status = "etoile"]
+  ask max-n-of (min list waiting global:boarding-users-per-minute) (users with [user:status = "etoile"]) [user:travel-time] [
+     
+  ]
+  
+end
+
+
+to users:change-to-alternative-modes
+  
+end
+
+
+
+;;
+;
+to-report user:mode-travel-speed
+  report table:get global:alternative-modes-speed user:status
+end
+
+
+;;
+; arrival station is located at max-pxcor - margin
+to-report user:arrived?
+  report xcor > (max-pxcor - (abs min-pxcor))
+end
+
+
+to user:new-rer-user
+  set user:status "etoile"
+  set xcor (- random-float 0.9) set ycor 0 set shape "person" 
+end
+
+to user:new-user-mode [mode]
+  set user:status mode
+  set xcor (- random-float 0.9) set ycor (2 * (position mode global:alternative-modes + 1))
+  set shape mode
+end

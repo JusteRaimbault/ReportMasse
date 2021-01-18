@@ -1,0 +1,66 @@
+
+
+to main:go
+  
+  users:arrive-new-users
+  
+  main:arrive-next-rer
+  
+  users:board-rer
+  
+  users:change-to-alternative-modes
+  
+  main:travel-step
+  
+  tick ; one time step ~ 1min
+  
+end
+
+
+to main:arrive-next-rer
+  
+end
+
+
+;;
+; advance all modes between Etoile (x = 0) and LaDefense (x = xmax)
+to main:travel-step
+   
+  ask users [
+    ; update travel time
+    set user:travel-time user:travel-time + 1
+  
+    ifelse user:transfer-time > 0 [
+      set user:transfer-time user:transfer-time - 1
+    ][
+      if member? user:status global:alternative-modes [
+        ifelse xcor > 0 [
+           ; advance already travelling alternative modes
+           set xcor xcor + (user:mode-travel-speed * (max-pxcor - (abs min-pxcor)))
+        ][
+           ; else need to check the current congestion on the mode
+          let mode user:status
+          if count users with [user:status = mode and xcor > 0] < (table:get global:alternative-modes-capacities mode) [
+             set xcor xcor + (user:mode-travel-speed * (max-pxcor - (abs min-pxcor)))
+          ]
+        ]
+      ]
+    ]
+    
+    ; users within a rer
+     
+  
+    ; kill arrived users after saving their indicators
+    if user:arrived? [
+      set global:effective-travel-times lput user:travel-time global:effective-travel-times
+      set global:arrived-users global:arrived-users + 1
+      set global:effective-congestion lput user:departure-congestion global:effective-congestion
+      die
+    ]
+    
+  ]
+  
+  
+  
+end
+
