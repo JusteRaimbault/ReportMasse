@@ -4,6 +4,8 @@ __includes [
   "setup.nls"
   "main.nls"
   "users.nls"
+  "rers.nls"
+  "indicators.nls"
 
 ]
 
@@ -13,8 +15,20 @@ globals [
   ; parameters
 
   ;;
+  ; final time step for a full peak hour
+  global:final-time
+
+  ;;
   ; users boarding the rer per minute
   global:boarding-users-per-minute
+
+  ;;
+  ; rer max speed
+  global:rer-max-speed
+
+  ;;
+  ; rer max time in station for boarding and alighting
+  global:rer-max-time-in-station
 
   ;;
   ; names of alternative modes
@@ -24,9 +38,15 @@ globals [
   ; stationary Poisson arrival rates for alternative modes
   global:alternative-modes-arrival-rates
 
+  ;;
+  ; capacities (for full segment - each mode works as a queue to simplify and avoid speed = f(congestion))
   global:alternative-modes-capacities
 
+  ;;
+  ; speeds for alternative modes
   global:alternative-modes-speed
+
+
 
   ;;
   ; indicators
@@ -36,6 +56,7 @@ globals [
   global:effective-travel-times
   global:effective-congestion
   global:arrived-users
+  global:waiting-users-history
 
 
   global:headless?
@@ -44,6 +65,11 @@ globals [
 
 
 breed [rers rer]
+
+rers-own [
+  rer:time-in-station
+  rer:gone?
+]
 
 breed [users user]
 
@@ -58,8 +84,12 @@ users-own [
   user:status
 
   ;;
-  ; walking time when switching mode
+  ; walking time when switching mode: used for users with status = "etoile" only
   user:transfer-time
+
+  ;;
+  ; rer in which the user is when status = "rer"
+  user:rer
 
   ;;
   ; total travel time experienced by the user
@@ -118,10 +148,10 @@ NIL
 1
 
 BUTTON
-26
-85
-92
-118
+101
+42
+167
+75
 go
 main:go
 T
@@ -135,30 +165,30 @@ NIL
 1
 
 SLIDER
-5
-145
-198
-178
+9
+187
+202
+220
 global:rer-users-arrival-rate
 global:rer-users-arrival-rate
 0
 200
-0.0
+200.0
 10
 1
 NIL
 HORIZONTAL
 
 SLIDER
-5
-187
-198
-220
+9
+229
+202
+262
 global:rer-capacity
 global:rer-capacity
 0
 2600
-1000.0
+400.0
 100
 1
 NIL
@@ -176,12 +206,66 @@ global:arrived-users
 11
 
 MONITOR
-413
-345
-470
-390
+401
+343
+458
+388
 users
 count users
+17
+1
+11
+
+BUTTON
+26
+86
+146
+119
+go peak hours
+main:go-peak-hours
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+9
+268
+201
+301
+global:rer-interval
+global:rer-interval
+1
+10
+2.0
+1
+1
+NIL
+HORIZONTAL
+
+MONITOR
+270
+394
+349
+439
+waiting rer
+indicators:waiting-users
+17
+1
+11
+
+MONITOR
+465
+342
+522
+387
+rers
+count rers
 17
 1
 11

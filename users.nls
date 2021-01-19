@@ -18,17 +18,47 @@ to users:arrive-new-users
 end
 
 
+;;
+; board rer
 to users:board-rer
-  let waiting count users with [user:status = "etoile"]
-  ask max-n-of (min list waiting global:boarding-users-per-minute) (users with [user:status = "etoile"]) [user:travel-time] [
-     
+  let waiting count users with [user:status = "etoile" and user:transfer-time = 0]
+  let potential-boarded-rers rers with [xcor = 0]
+  if count potential-boarded-rers > 0 [ ; this cant be higher than one
+    let boarded-rer one-of potential-boarded-rers
+    ask max-n-of (min list waiting global:boarding-users-per-minute) (users with [user:status = "etoile" and user:transfer-time = 0]) [user:travel-time] [
+      set user:status "rer" set hidden? true set user:rer boarded-rer
+    ]
   ]
-  
+end
+
+;;
+; alight rer
+to users:alight-rer
+  let potential-alighted-rers rers with [xcor = main:max-xcor]
+  if count potential-alighted-rers > 0 [
+    let alighted-rer one-of potential-alighted-rers
+    let alighting-users users with [user:rer = alighted-rer]
+    ask n-of (min list (count alighting-users) global:boarding-users-per-minute) alighting-users [
+      set global:effective-travel-times lput user:travel-time global:effective-travel-times
+      set global:arrived-users global:arrived-users + 1
+      set global:effective-congestion lput user:departure-congestion global:effective-congestion
+      die
+    ] 
+
+  ]
 end
 
 
+;;
+; user behavior on the platform - react to potential disturbance
+; flowchart?
+;  - too much users on the platform
+;  - info on next rer
+;  -> aggregated variable boarding users/min ~ perceived congestion?
 to users:change-to-alternative-modes
-  
+  ask users with [user:status = "etoile" and user:transfer-time = 0][
+    ; TODO
+  ]
 end
 
 
@@ -42,6 +72,8 @@ end
 
 ;;
 ; arrival station is located at max-pxcor - margin
+; ! not needed for rer - arrived if effectively alighted
+;  but for other modes yes
 to-report user:arrived?
   report xcor > (max-pxcor - (abs min-pxcor))
 end
@@ -49,11 +81,13 @@ end
 
 to user:new-rer-user
   set user:status "etoile"
+  set user:rer nobody
   set xcor (- random-float 0.9) set ycor 0 set shape "person" 
 end
 
 to user:new-user-mode [mode]
   set user:status mode
+  set user:rer nobody
   set xcor (- random-float 0.9) set ycor (2 * (position mode global:alternative-modes + 1))
   set shape mode
 end

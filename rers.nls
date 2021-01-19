@@ -1,0 +1,55 @@
+
+;;
+; advance rers: queuing system in tunnel so that congestion is ~ simulated
+to rers:advance-rers
+  if count rers > 0 [
+    let ordered-rers sort-on [(- xcor)] rers
+    ask (first ordered-rers) [
+      ; first advance or remove the last rer (or do nothing if still alighting)
+      ifelse xcor < main:max-xcor [
+         set xcor min (list main:max-xcor (xcor + (main:max-xcor * global:rer-max-speed)))
+        if xcor = main:max-xcor [set rer:time-in-station 0]
+      ][
+         ; check if all passengers have alighted
+         ; note: to take into account user arriving before origin and continuing after destination, decrease rer capacity parameter
+         ; so that this is taken into account as a stationary "background" flow
+         ifelse count users with [user:rer = myself] = 0 or rer:time-in-station >= global:rer-max-time-in-station [
+           ask users with [user:rer = myself][die] ; all users should be able to alight as same time in station and alighting rate?
+           ;die ; alighting at destination is finished, go into the void (i.e. West of Paris)
+           set rer:gone? true ; but must do this after - coord still needed for queue computation below
+         ][
+           set rer:time-in-station rer:time-in-station + 1
+         ]
+      ]
+    ]
+    (foreach (but-last ordered-rers) (but-first ordered-rers) [
+      [nextrer currentrer] ->
+      let maxdist [xcor] of nextrer - [xcor] of currentrer - (0.1 * main:max-xcor) ; remove security distance
+      ask currentrer [
+        ifelse xcor = 0 and rer:time-in-station < global:rer-max-time-in-station [set rer:time-in-station rer:time-in-station + 1][
+          let deltax min (list maxdist (main:max-xcor * global:rer-max-speed))
+          ifelse xcor < 0 and xcor + deltax > 0 [
+            set xcor 0 set rer:time-in-station 0
+           ][
+              set xcor xcor + deltax
+          ]
+        ]
+      ]
+    ])
+  ]
+  
+  ask rers with [rer:gone? = true][die]
+end
+
+
+;;
+; create the next rer in the tunnel before the segment
+;  (actual arrival in station is done in rers:advance-rers)
+;  we assume that negative coords is one sillon only to we create the next one only if prestation is empty
+to rer:arrive-next-rer
+  if ticks mod global:rer-interval = 0 and count rers with [xcor < 0] = 0 [
+    create-rers 1 [
+      set shape "rer" set xcor min-pxcor - 0.49 set ycor 0
+    ] 
+  ]
+end

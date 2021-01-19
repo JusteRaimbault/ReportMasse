@@ -18,17 +18,25 @@ end
 ; hardcoded parameters
 to setup:setup-globals
   
+  set global:final-time 240
+  
   set global:boarding-users-per-minute 1000 ; for a MI09, boarding ~ 2600 users takes 1min30 at peak time 
+  
+  set global:rer-max-speed 0.25 ; 4min ~ for the segment
+  
+  set global:rer-max-time-in-station 2 ; this may be modified for a perturbation?
   
   set global:alternative-modes (list "m1" "bus" "bike" "taxi" "walking")
   
+  ; Poisson average arrival rates for other modes (independant of mode rerouting)
   set global:alternative-modes-arrival-rates table:make
-  table:put global:alternative-modes-arrival-rates "m1" 50
-  table:put global:alternative-modes-arrival-rates "bus" 20
-  table:put global:alternative-modes-arrival-rates "bike" 10 
-  table:put global:alternative-modes-arrival-rates "taxi" 10
-  table:put global:alternative-modes-arrival-rates "walking" 20 
+  table:put global:alternative-modes-arrival-rates "m1" 20
+  table:put global:alternative-modes-arrival-rates "bus" 10
+  table:put global:alternative-modes-arrival-rates "bike" 2 
+  table:put global:alternative-modes-arrival-rates "taxi" 2
+  table:put global:alternative-modes-arrival-rates "walking" 2 
   
+  ; alternative mode capacities in user / full segment
   set global:alternative-modes-capacities table:make
   table:put global:alternative-modes-capacities "m1" 3500 ; 700 per train x 5 trains on the segment
   table:put global:alternative-modes-capacities "bus" 1000 ; 100 per bus x 10 bus
@@ -36,6 +44,7 @@ to setup:setup-globals
   table:put global:alternative-modes-capacities "taxi" 30 ; 
   table:put global:alternative-modes-capacities "walking" 100000 ; ~ infinite 
   
+  ; alternative modes speed in 1 / (minutes for the segment) : segment distance normalized by 1
   set global:alternative-modes-speed table:make
   table:put global:alternative-modes-speed "m1" 0.1 ; 10min for the segment 
   table:put global:alternative-modes-speed "bus" 0.033 ; 30 min
@@ -50,5 +59,6 @@ end
 to setup:setup-indicators
   set global:effective-travel-times []
   set global:effective-congestion []
+  set global:waiting-users-history [0]
   set global:arrived-users 0
 end

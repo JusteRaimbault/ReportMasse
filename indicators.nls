@@ -1,0 +1,26 @@
+
+to indicators:compute-indicators
+  show (word "average travel time = " indicators:average-travel-time)
+  show (word "average congestion = " indicators:average-congestion)
+end
+
+;;
+; store historical indicators
+to indicators:update-indicators
+  set global:waiting-users-history lput indicators:waiting-users global:waiting-users-history
+end
+
+
+to-report indicators:average-travel-time
+  report mean global:effective-travel-times
+end
+
+;;
+; note: this is averaged on all modes
+to-report indicators:average-congestion
+  report mean global:effective-congestion
+end
+
+to-report indicators:waiting-users
+  report count users with [user:status = "etoile" and user:transfer-time = 0] 
+end

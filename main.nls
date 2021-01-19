@@ -1,10 +1,26 @@
 
 
+;;
+; run a simulation corresponding ~ to a full peak hour:
+; 1h to reach stationary state, + 3h ~ -> set global:final-time to 240
+to main:go-peak-hours
+  carefully [show ticks][show "Setup needed first" stop]
+  
+  repeat global:final-time [
+    main:go
+  ]
+  
+  indicators:compute-indicators
+  
+end
+
+
+
 to main:go
   
   users:arrive-new-users
   
-  main:arrive-next-rer
+  rer:arrive-next-rer
   
   users:board-rer
   
@@ -12,14 +28,16 @@ to main:go
   
   main:travel-step
   
+  users:alight-rer
+  
+  indicators:update-indicators
+  
   tick ; one time step ~ 1min
   
 end
 
 
-to main:arrive-next-rer
-  
-end
+
 
 
 ;;
@@ -30,37 +48,52 @@ to main:travel-step
     ; update travel time
     set user:travel-time user:travel-time + 1
   
-    ifelse user:transfer-time > 0 [
+    ifelse user:transfer-time > 0 [ ; this should be only users with status = etoile and transferring
+      ; just update transfer time if transferring
       set user:transfer-time user:transfer-time - 1
     ][
       if member? user:status global:alternative-modes [
         ifelse xcor > 0 [
            ; advance already travelling alternative modes
-           set xcor xcor + (user:mode-travel-speed * (max-pxcor - (abs min-pxcor)))
+           set xcor xcor + (user:mode-travel-speed * main:max-xcor)
         ][
            ; else need to check the current congestion on the mode
-          let mode user:status
-          if count users with [user:status = mode and xcor > 0] < (table:get global:alternative-modes-capacities mode) [
-             set xcor xcor + (user:mode-travel-speed * (max-pxcor - (abs min-pxcor)))
+          let mode user:status let capacity (table:get global:alternative-modes-capacities mode)
+          let current-users count users with [user:status = mode and xcor > 0]
+          if current-users < capacity [
+             set xcor xcor + (user:mode-travel-speed * main:max-xcor)
+             set user:departure-congestion current-users / capacity
           ]
         ]
       ]
     ]
     
-    ; users within a rer
-     
+  ]
   
-    ; kill arrived users after saving their indicators
+  rers:advance-rers
+      
+  ; advance users within a rer
+  ask users with [user:status = "rer"][
+    set xcor [xcor] of user:rer
+  ]
+  
+  ; check if arrived for non-rer users
+  ask users with [user:status != "rer"][
     if user:arrived? [
       set global:effective-travel-times lput user:travel-time global:effective-travel-times
       set global:arrived-users global:arrived-users + 1
       set global:effective-congestion lput user:departure-congestion global:effective-congestion
       die
     ]
-    
-  ]
+  ] 
   
   
   
 end
 
+
+;;
+; rescaling for xcor of end station
+to-report main:max-xcor
+  report (max-pxcor - (abs min-pxcor))
+end
