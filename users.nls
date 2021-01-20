@@ -54,13 +54,24 @@ end
 ; flowchart?
 ;  - too much users on the platform
 ;  - info on next rer
-;  -> aggregated variable boarding users/min ~ perceived congestion?
+;  -> aggregated variable boarding users/min ~ perceived congestion? - or # people on the platform?
+;  -> estimated wait time variable including rer frequency + uncertainty (parameter set > 0 for a disturbance)
+;
+; Use nested logit model: first choose stay/change mode; then choose alternative mode
 to users:change-to-alternative-modes
   ask users with [user:status = "etoile" and user:transfer-time = 0][
-    ; TODO
+    if random-float 1 > user:stay-discrete-choice-proba [ ; random drawing: stay (do nothing if < proba)
+      ; nested logit for other mode choice
+      ; TODO: can use directly empirical probas instaed of estimated logit coefs?
+    ]
   ]
 end
 
+;;
+; discrete choice model for staying on the RER platform
+to-report user:stay-discrete-choice-proba
+  report 1 ; TODO
+end
 
 
 ;;
