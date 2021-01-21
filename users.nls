@@ -21,12 +21,15 @@ end
 ;;
 ; board rer
 to users:board-rer
-  let waiting count users with [user:status = "etoile" and user:transfer-time = 0]
+  let waiting count users with [user:status = "etoile"]
   let potential-boarded-rers rers with [xcor = 0]
   if count potential-boarded-rers > 0 [ ; this cant be higher than one
     let boarded-rer one-of potential-boarded-rers
-    ask max-n-of (min list waiting global:boarding-users-per-minute) (users with [user:status = "etoile" and user:transfer-time = 0]) [user:travel-time] [
+    let boarding (min (list waiting global:boarding-users-per-minute global:rer-capacity))
+    ask max-n-of boarding (users with [user:status = "etoile"]) [user:travel-time] [
       set user:status "rer" set hidden? true set user:rer boarded-rer
+      set global:boarded-users global:boarded-users + 1
+      set user:departure-congestion boarding / global:rer-capacity
     ]
   ]
 end
@@ -39,12 +42,9 @@ to users:alight-rer
     let alighted-rer one-of potential-alighted-rers
     let alighting-users users with [user:rer = alighted-rer]
     ask n-of (min list (count alighting-users) global:boarding-users-per-minute) alighting-users [
-      set global:effective-travel-times lput user:travel-time global:effective-travel-times
-      set global:arrived-users global:arrived-users + 1
-      set global:effective-congestion lput user:departure-congestion global:effective-congestion
+      user:update-user-level-indicators-at-arrival
       die
-    ] 
-
+    ]
   ]
 end
 
@@ -59,18 +59,41 @@ end
 ;
 ; Use nested logit model: first choose stay/change mode; then choose alternative mode
 to users:change-to-alternative-modes
-  ask users with [user:status = "etoile" and user:transfer-time = 0][
-    if random-float 1 > user:stay-discrete-choice-proba [ ; random drawing: stay (do nothing if < proba)
-      ; nested logit for other mode choice
-      ; TODO: can use directly empirical probas instaed of estimated logit coefs?
+  set global:waiting-users indicators:waiting-users
+  ask users with [user:status = "etoile"][
+    set user:dc-proba user:stay-discrete-choice-proba
+    if random-float 1 > user:dc-proba [ ; random drawing: stay (do nothing if < proba)
+      ; nested logit for other mode choice: can use directly empirical probas instead of estimated logit coefs?
+      let nextmode utils:random-draw global:alternative-modes global:alternative-modes-shares
+      user:change-mode nextmode
+      set user:transfer-time global:mode-transfer-time
+      set global:diverted-users global:diverted-users + 1
     ]
   ]
 end
 
 ;;
 ; discrete choice model for staying on the RER platform
+; Utility difference is beta_c * congestion + beta_t * waiting
 to-report user:stay-discrete-choice-proba
-  report 1 ; TODO
+  let deltautility (user:beta-congestion * user:perceived-platform-congestion) + (user:beta-waiting * user:perceived-waiting-time)
+  report 1 / (1 + exp (deltautility))
+end
+
+;;
+; use number of users on the platform - computed as a global variable for performance
+; normalised by ~ content of 2 RERs on the platform
+to-report user:perceived-platform-congestion
+  report global:waiting-users / 4000
+end
+
+;;
+; very simple model of perceived time: waited time + interval given by info
+;  (rq: in practice, info is same as realized as rer arrival is deterministic: should add randomness on this aspect)
+; The second term with rer-interval just adds a constant to utility difference as both in the product are global parameter - so they will have a direct effect on diverted share - but this could be expected
+;  Normalized by 5min (empirically to have scales ~ similar for the beta - they are not in practice though and not with the same unit !)
+to-report user:perceived-waiting-time
+  report (user:travel-time + global:rer-interval) / 5
 end
 
 
@@ -89,16 +112,40 @@ to-report user:arrived?
   report xcor > (max-pxcor - (abs min-pxcor))
 end
 
+;;
+; update global user indicators when a user is arrived
+to user:update-user-level-indicators-at-arrival
+  ;show user:status
+  set global:effective-travel-times lput user:travel-time global:effective-travel-times
+  set global:arrived-users global:arrived-users + 1
+  set global:effective-congestion lput user:departure-congestion global:effective-congestion
+  table:put global:arrived-users-mode-counts user:status ((table:get global:arrived-users-mode-counts user:status) + 1)
+  table:put global:effective-congestion-by-mode user:status (lput user:departure-congestion (table:get global:effective-congestion-by-mode user:status))
+end
+
 
 to user:new-rer-user
+  user:new-user
   set user:status "etoile"
-  set user:rer nobody
-  set xcor (- random-float 0.9) set ycor 0 set shape "person" 
+  set ycor 0
+  set shape "person" 
 end
 
 to user:new-user-mode [mode]
+  user:new-user
+  user:change-mode mode
+end
+
+to user:change-mode [mode]
   set user:status mode
-  set user:rer nobody
-  set xcor (- random-float 0.9) set ycor (2 * (position mode global:alternative-modes + 1))
+  set ycor (2 * (position mode global:alternative-modes + 1))
   set shape mode
+end
+
+to user:new-user
+  set user:beta-congestion global:beta-congestion
+  set user:beta-waiting global:beta-waiting
+  set user:travel-time 1 ; at least one minute to arrive
+  set user:rer nobody
+  set xcor (- random-float 0.9)
 end

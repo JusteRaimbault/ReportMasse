@@ -80,9 +80,7 @@ to main:travel-step
   ; check if arrived for non-rer users
   ask users with [user:status != "rer"][
     if user:arrived? [
-      set global:effective-travel-times lput user:travel-time global:effective-travel-times
-      set global:arrived-users global:arrived-users + 1
-      set global:effective-congestion lput user:departure-congestion global:effective-congestion
+      user:update-user-level-indicators-at-arrival
       die
     ]
   ] 

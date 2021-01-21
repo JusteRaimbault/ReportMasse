@@ -1,4 +1,8 @@
 
+;;
+; See Leng, N., & Corman, F. (2020). The role of information availability to passengers in public transport disruptions: An agent-based simulation approach. Transportation Research Part A: Policy and Practice, 133, 214-236.
+;  -> much simpler model here
+
 __includes [
 
   "setup.nls"
@@ -6,6 +10,7 @@ __includes [
   "users.nls"
   "rers.nls"
   "indicators.nls"
+  "utils.nls"
 
 ]
 
@@ -31,8 +36,16 @@ globals [
   global:rer-max-time-in-station
 
   ;;
+  ; transfer time between rer and other modes
+  global:mode-transfer-time
+
+  ;;
   ; names of alternative modes
   global:alternative-modes
+
+  ;;
+  ; empirical mode shares when switching from rer to an other mode
+  global:alternative-modes-shares
 
   ;;
   ; stationary Poisson arrival rates for alternative modes
@@ -55,9 +68,13 @@ globals [
   ; history of effective travel times
   global:effective-travel-times
   global:effective-congestion
+  global:effective-congestion-by-mode
   global:arrived-users
+  global:waiting-users
   global:waiting-users-history
-
+  global:diverted-users
+  global:boarded-users
+  global:arrived-users-mode-counts
 
   global:headless?
 
@@ -100,6 +117,18 @@ users-own [
   ; if we consider the trip as one leg only (and neglect intermediate stations for the bus and metro)
   ; recorded when one user quits one possible waiting queue
   user:departure-congestion
+
+  ;;
+  ; discrete choice user level parameter for perceived congestion on the platform
+  user:beta-congestion
+
+  ;;
+  ; discrete choice user level parameter for perceived waiting time
+  user:beta-waiting
+
+  ;;
+  ; store proba for reporting
+  user:dc-proba
 
 ]
 @#$#@#$#@
@@ -154,7 +183,7 @@ BUTTON
 75
 go
 main:go
-T
+NIL
 1
 T
 OBSERVER
@@ -172,8 +201,8 @@ SLIDER
 global:rer-users-arrival-rate
 global:rer-users-arrival-rate
 0
-200
-200.0
+500
+500.0
 10
 1
 NIL
@@ -188,28 +217,28 @@ global:rer-capacity
 global:rer-capacity
 0
 2600
-400.0
+300.0
 100
 1
 NIL
 HORIZONTAL
 
 MONITOR
-269
-343
-393
-388
-NIL
+266
+414
+356
+459
+arrived users
 global:arrived-users
 17
 1
 11
 
 MONITOR
-401
-343
-458
-388
+266
+316
+323
+361
 users
 count users
 17
@@ -249,10 +278,10 @@ NIL
 HORIZONTAL
 
 MONITOR
-270
-394
-349
-439
+387
+316
+462
+361
 waiting rer
 indicators:waiting-users
 17
@@ -260,15 +289,136 @@ indicators:waiting-users
 11
 
 MONITOR
-465
-342
-522
-387
+326
+316
+383
+361
 rers
 count rers
 17
 1
 11
+
+SLIDER
+10
+318
+203
+351
+global:beta-congestion
+global:beta-congestion
+-5
+5
+1.7
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+354
+203
+387
+global:beta-waiting
+global:beta-waiting
+-5
+5
+-0.6
+0.1
+1
+NIL
+HORIZONTAL
+
+MONITOR
+520
+362
+599
+407
+stay proba
+indicators:waiting-users-stay-proba
+4
+1
+11
+
+MONITOR
+361
+414
+453
+459
+diverted users
+global:diverted-users
+17
+1
+11
+
+MONITOR
+456
+413
+549
+458
+boarded users
+global:boarded-users
+17
+1
+11
+
+MONITOR
+552
+413
+641
+458
+share diverted
+indicators:share-diverted-users
+3
+1
+11
+
+MONITOR
+265
+363
+381
+408
+perceived wait time
+indicators:perceived-waiting-time
+4
+1
+11
+
+MONITOR
+384
+363
+516
+408
+perceived congestion
+indicators:perceived-platform-congestion
+4
+1
+11
+
+PLOT
+791
+41
+1222
+305
+users
+time
+count
+0.0
+1.0
+0.0
+1.0
+true
+true
+"" ""
+PENS
+"waiting" 1.0 0 -2674135 true "" "plot count users with [user:status = \"etoile\"]"
+"rer" 1.0 0 -13791810 true "" "plot count users with [user:status = \"rer\"]"
+"m1" 1.0 0 -723837 true "" "plot count users with [user:status = \"m1\"]"
+"bus" 1.0 0 -11881837 true "" "plot count users with [user:status = \"bus\"]"
+"taxi" 1.0 0 -4699768 true "" "plot count users with [user:status = \"taxi\"]"
+"bike" 1.0 0 -14070903 true "" "plot count users with [user:status = \"bike\"]"
+"walking" 1.0 0 -955883 true "" "plot count users with [user:status = \"walking\"]"
+"transfer" 1.0 0 -8431303 true "" "plot count users with [user:transfer-time > 0]"
 
 @#$#@#$#@
 ## WHAT IS IT?

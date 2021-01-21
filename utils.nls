@@ -1,0 +1,13 @@
+
+;;
+; draw one element of values following probabilities (these are rescaled so can be weights)
+to-report utils:random-draw [values weights]
+  let s sum weights let probas map [? -> ? / s] weights
+  let r random-float 1
+  let cums 0
+  (foreach values probas [[v p] ->
+    set cums cums + p
+    if r < cums [report v]
+  ])
+  report last values
+end

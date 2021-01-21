@@ -2,6 +2,15 @@
 to indicators:compute-indicators
   show (word "average travel time = " indicators:average-travel-time)
   show (word "average congestion = " indicators:average-congestion)
+  show (word "average mode share rer = " indicators:average-mode-share-rer)
+  show (word "average mode share other = " indicators:average-mode-share-other)
+  show (word "average congestion rer = " indicators:average-congestion-rer)
+  show (word "average congestion other = " indicators:average-congestion-other)
+  show (word "average waiting users = " indicators:average-waiting-users)
+  show (word "total arrived users = " indicators:total-arrived-users)
+  show (word "total diverted users = " indicators:total-diverted-users)
+  show (word "total boarded users = " indicators:total-boarded-users)
+  show (word "share diverted users = " indicators:share-diverted-users)
 end
 
 ;;
@@ -21,6 +30,84 @@ to-report indicators:average-congestion
   report mean global:effective-congestion
 end
 
-to-report indicators:waiting-users
-  report count users with [user:status = "etoile" and user:transfer-time = 0] 
+to-report indicators:average-waiting-users
+  report mean global:waiting-users-history
 end
+
+to-report indicators:total-arrived-users
+  report global:arrived-users
+end
+
+to-report indicators:total-diverted-users
+  report global:diverted-users
+end
+
+to-report indicators:total-boarded-users
+  report global:boarded-users
+end
+
+to-report indicators:share-diverted-users
+  report indicators:total-diverted-users / (indicators:total-diverted-users + indicators:total-boarded-users)
+end
+
+to-report indicators:average-mode-share-rer
+  report table:get global:arrived-users-mode-counts "rer" / global:arrived-users
+end
+
+;;
+; reports a list in order of alternative mode names
+to-report indicators:average-mode-share-other
+  let res []
+  foreach global:alternative-modes [ mode -> 
+    set res lput (table:get global:arrived-users-mode-counts mode / global:arrived-users) res
+  ]
+  report res 
+end
+
+to-report indicators:average-congestion-rer
+  report mean (table:get global:effective-congestion-by-mode "rer")
+end
+
+;;
+; list of effective congestion for other modes
+to-report indicators:average-congestion-other
+  let res []
+  foreach global:alternative-modes [ mode ->
+    set res lput (mean (table:get global:effective-congestion-by-mode mode)) res
+  ]
+  report res 
+end
+
+;;
+; instantaneous indicators
+
+
+;;
+;
+to-report indicators:waiting-users
+  report count users with [user:status = "etoile"] 
+end
+
+to-report indicators:waiting-users-stay-proba
+  let waiting users with [user:status = "etoile" and user:dc-proba > 0]
+  ifelse count waiting > 0 [
+    report mean [user:dc-proba] of waiting
+  ][
+    report 0 
+  ]
+end
+
+to-report indicators:perceived-waiting-time
+  report mean [user:perceived-waiting-time] of users with [user:status = "etoile"]
+end
+
+to-report indicators:perceived-platform-congestion
+  report mean [user:perceived-platform-congestion] of users with [user:status = "etoile"]
+end
+
+
+
+
+
+
+  

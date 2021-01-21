@@ -26,7 +26,11 @@ to setup:setup-globals
   
   set global:rer-max-time-in-station 2 ; this may be modified for a perturbation?
   
+  set global:mode-transfer-time 5 ; ~ 5 min walking from platform to other modes
+  
   set global:alternative-modes (list "m1" "bus" "bike" "taxi" "walking")
+  
+  set global:alternative-modes-shares (list 0.65 0.1 0.1 0.05 0.1)
   
   ; Poisson average arrival rates for other modes (independant of mode rerouting)
   set global:alternative-modes-arrival-rates table:make
@@ -59,6 +63,10 @@ end
 to setup:setup-indicators
   set global:effective-travel-times []
   set global:effective-congestion []
+  set global:effective-congestion-by-mode table:make table:put global:effective-congestion-by-mode "rer" []
+  foreach global:alternative-modes [mode -> table:put global:effective-congestion-by-mode mode [] ]
   set global:waiting-users-history [0]
   set global:arrived-users 0
+  set global:arrived-users-mode-counts table:make table:put global:arrived-users-mode-counts "rer" 0
+  foreach global:alternative-modes [mode -> table:put global:arrived-users-mode-counts mode 0 ]
 end
