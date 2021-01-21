@@ -10,8 +10,10 @@ to main:go-peak-hours
     main:go
   ]
   
-  indicators:compute-indicators
-  
+  if global:headless? != true [
+    indicators:compute-indicators
+  ]
+    
 end
 
 

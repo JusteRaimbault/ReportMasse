@@ -11,6 +11,8 @@ __includes [
   "indicators.nls"
   "utils.nls"
 
+  "experiments.nls"
+
 ]
 
 globals [
@@ -76,6 +78,12 @@ globals [
   global:arrived-users-mode-counts
 
   global:headless?
+
+  global:rer-users-arrival-rate
+  global:rer-capacity
+  global:rer-interval
+  global:beta-congestion
+  global:beta-waiting
 
 ]
 
@@ -159,12 +167,12 @@ ticks
 30.0
 
 BUTTON
-26
+58
 42
-92
+190
 75
-setup
-setup:setup
+NIL
+test-experiment
 NIL
 1
 T
@@ -174,250 +182,6 @@ NIL
 NIL
 NIL
 1
-
-BUTTON
-101
-42
-167
-75
-go
-main:go
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-SLIDER
-9
-187
-202
-220
-global:rer-users-arrival-rate
-global:rer-users-arrival-rate
-0
-500
-150.0
-10
-1
-NIL
-HORIZONTAL
-
-SLIDER
-9
-229
-202
-262
-global:rer-capacity
-global:rer-capacity
-0
-2600
-700.0
-100
-1
-NIL
-HORIZONTAL
-
-MONITOR
-266
-414
-356
-459
-arrived users
-global:arrived-users
-17
-1
-11
-
-MONITOR
-266
-316
-323
-361
-users
-count users
-17
-1
-11
-
-BUTTON
-26
-86
-146
-119
-go peak hours
-main:go-peak-hours
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-SLIDER
-9
-268
-201
-301
-global:rer-interval
-global:rer-interval
-1
-10
-4.0
-1
-1
-NIL
-HORIZONTAL
-
-MONITOR
-387
-316
-462
-361
-waiting rer
-indicators:waiting-users
-17
-1
-11
-
-MONITOR
-326
-316
-383
-361
-rers
-count rers
-17
-1
-11
-
-SLIDER
-10
-318
-203
-351
-global:beta-congestion
-global:beta-congestion
--5
-5
-1.7
-0.1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-10
-354
-203
-387
-global:beta-waiting
-global:beta-waiting
--5
-5
--0.6
-0.1
-1
-NIL
-HORIZONTAL
-
-MONITOR
-520
-362
-599
-407
-stay proba
-indicators:waiting-users-stay-proba
-4
-1
-11
-
-MONITOR
-361
-414
-453
-459
-diverted users
-global:diverted-users
-17
-1
-11
-
-MONITOR
-456
-413
-549
-458
-boarded users
-global:boarded-users
-17
-1
-11
-
-MONITOR
-552
-413
-641
-458
-share diverted
-indicators:share-diverted-users
-3
-1
-11
-
-MONITOR
-265
-363
-381
-408
-perceived wait time
-indicators:perceived-waiting-time
-4
-1
-11
-
-MONITOR
-384
-363
-516
-408
-perceived congestion
-indicators:perceived-platform-congestion
-4
-1
-11
-
-PLOT
-791
-41
-1222
-305
-users
-time
-count
-0.0
-1.0
-0.0
-1.0
-true
-true
-"" ""
-PENS
-"waiting" 1.0 0 -2674135 true "" "plot count users with [user:status = \"etoile\"]"
-"rer" 1.0 0 -13791810 true "" "plot count users with [user:status = \"rer\"]"
-"m1" 1.0 0 -723837 true "" "plot count users with [user:status = \"m1\"]"
-"bus" 1.0 0 -11881837 true "" "plot count users with [user:status = \"bus\"]"
-"taxi" 1.0 0 -4699768 true "" "plot count users with [user:status = \"taxi\"]"
-"bike" 1.0 0 -14070903 true "" "plot count users with [user:status = \"bike\"]"
-"walking" 1.0 0 -955883 true "" "plot count users with [user:status = \"walking\"]"
-"transfer" 1.0 0 -8431303 true "" "plot count users with [user:transfer-time > 0]"
 
 @#$#@#$#@
 ## WHAT IS IT?

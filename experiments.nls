@@ -1,0 +1,41 @@
+
+to setup-experiment [arrivalrate rercapacity rerinterval betacongestion betawaiting seed]
+  
+  show (word "Experiment : " arrivalrate " ; " rercapacity " ; " rerinterval " ; " betacongestion " ; " betawaiting " ; " seed)
+  
+  ca
+  
+  set global:headless? true
+  
+  random-seed seed
+  
+  set global:rer-users-arrival-rate arrivalrate ; [50; 300]
+  set global:rer-capacity rercapacity ; [50 ; 2600]
+  set global:rer-interval rerinterval ; [1 ; 15]
+  set global:beta-congestion betacongestion ; [-5;5]
+  set global:beta-waiting betawaiting ; [-5;5]
+  
+  ; no particular headless setup
+  
+  setup:setup
+  
+end
+
+to run-experiment
+  carefully[
+    main:go-peak-hours
+  ][
+    show error-message
+  ]
+end
+
+
+
+to test-experiment
+  ca
+  
+  ;setup-experiment arrivalrate rercapacity rerinterval betacongestion betawaiting seed
+  setup-experiment 100.0 300.0 5.0 -0.5 -0.5 (random 100000)
+  run-experiment
+  indicators:compute-indicators
+end
