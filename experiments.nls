@@ -1,5 +1,5 @@
 
-to setup-experiment [arrivalrate rercapacity rerinterval betacongestion betawaiting seed]
+to experiments:setup-experiment [arrivalrate rercapacity rerinterval betacongestion betawaiting seed]
   
   show (word "Experiment : " arrivalrate " ; " rercapacity " ; " rerinterval " ; " betacongestion " ; " betawaiting " ; " seed)
   
@@ -21,7 +21,7 @@ to setup-experiment [arrivalrate rercapacity rerinterval betacongestion betawait
   
 end
 
-to run-experiment
+to experiments:run-experiment
   carefully[
     main:go-peak-hours
   ][
@@ -31,11 +31,11 @@ end
 
 
 
-to test-experiment
+to experiments:test-experiment
   ca
   
   ;setup-experiment arrivalrate rercapacity rerinterval betacongestion betawaiting seed
-  setup-experiment 100.0 300.0 5.0 -0.5 -0.5 (random 100000)
-  run-experiment
+  experiments:setup-experiment 100.0 300.0 5.0 -0.5 -0.5 (random 100000)
+  experiments:run-experiment
   indicators:compute-indicators
 end

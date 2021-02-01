@@ -167,12 +167,12 @@ ticks
 30.0
 
 BUTTON
-58
+5
 42
-190
+217
 75
 NIL
-test-experiment
+experiments:test-experiment
 NIL
 1
 T

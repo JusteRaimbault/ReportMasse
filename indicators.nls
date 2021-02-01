@@ -65,7 +65,8 @@ to-report indicators:average-mode-share-other
 end
 
 to-report indicators:average-congestion-rer
-  report mean (table:get global:effective-congestion-by-mode "rer")
+  let cong table:get global:effective-congestion-by-mode "rer"
+  ifelse length cong = 0 [report 0][report mean cong]
 end
 
 ;;
@@ -73,7 +74,8 @@ end
 to-report indicators:average-congestion-other
   let res []
   foreach global:alternative-modes [ mode ->
-    set res lput (mean (table:get global:effective-congestion-by-mode mode)) res
+    let cong table:get global:effective-congestion-by-mode mode
+    ifelse length cong = 0 [set res lput 0 res][set res lput (mean cong) res]
   ]
   report res 
 end
