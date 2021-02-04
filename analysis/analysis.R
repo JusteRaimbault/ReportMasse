@@ -1,12 +1,16 @@
 
-setwd(paste0(Sys.getenv('CS_HOME'),'/Teaching/2020-OACMO/ReportMasse'))
+setwd(paste0(Sys.getenv('CS_HOME'),'/Transportation/ReportMasse/Models/ReportMasse'))
 
 library(dplyr)
 library(ggplot2)
 
 source(paste0(Sys.getenv('CS_HOME'),'/Organisation/Models/Utils/R/plots.R'))
 
-res <- as.tbl(read.csv('exploration/20210121_215409_GRIDEXPLORATION_GRID.csv'))
+#resPrefix = '20210121_215409_GRIDEXPLORATION_GRID'
+resPrefix = '20210203_104358_GRIDEXPLORATION-TARGETED_GRID'
+res <- as.tbl(read.csv(paste0('exploration/',resPrefix,'.csv')))
+resdir = paste0('results/',resPrefix,'/');dir.create(resdir)
+
 
 summary(res %>% group_by(id) %>% summarise(count = n()))
 
@@ -28,6 +32,6 @@ rerCapacities=c(10,1010)
 
 for(indic in indicators){
     g=ggplot(res[res$arrivalRate==arrivalRate&res$rerInterval%in%rerIntervals&res$rerCapacity%in%rerCapacities,],aes_string(x="betaCongestion",y=indic,colour="betaWaiting",group="betaWaiting"))
-    ggsave(plot = g+geom_point(pch='.')+geom_smooth()+facet_grid(rerCapacity~rerInterval,scales="free")+stdtheme,filename = paste0('results/',indic,'-betaCongestion_colour-betaWaiting_facet-rerCapacity-rerInterval_arrivalRate-',arrivalRate,'_TARGETED.png'),width=20,height=15,units='cm')
+    ggsave(plot = g+geom_point(pch='.')+geom_smooth()+facet_grid(rerCapacity~rerInterval,scales="free")+stdtheme,filename = paste0(resdir,indic,'-betaCongestion_colour-betaWaiting_facet-rerCapacity-rerInterval_arrivalRate-',arrivalRate,'_TARGETED.png'),width=20,height=15,units='cm')
 }
 
