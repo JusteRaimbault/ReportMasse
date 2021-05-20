@@ -1,0 +1,59 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+
+// parameters
+val arrivalRate = Val[Double]
+val rerCapacity = Val[Double]
+val rerInterval = Val[Double]
+val betaCongestion = Val[Double]
+val betaWaiting = Val[Double]
+
+// indicators
+val averageCongestionRer = Val[Double]
+val averageCongestionOthers = Val[Double]
+
+
+val replication = Val[Int]
+
+
+val cmds = Seq("experiments:setup-experiment ${arrivalRate} ${rerCapacity} ${rerInterval} ${betaCongestion} ${betaWaiting} ${replication}","experiments:run-experiment")
+
+val model = NetLogo6Task(workDirectory / "HEADLESS_ReportMasse.nlogo",cmds,embedWorkspace=true,reuseWorkspace=true) set (
+    inputs += (arrivalRate,rerCapacity,rerInterval,betaCongestion,betaWaiting,replication),
+    outputs += (arrivalRate,rerCapacity,rerInterval,betaCongestion,betaWaiting,replication),
+    outputs += averageCongestionRer mapped "indicators:average-congestion-rer",
+    outputs += averageCongestionOthers mapped "(sum indicators:average-congestion-other) / (length global:alternative-modes)",
+    arrivalRate := 100.0,
+    rerCapacity := 500.0,
+    rerInterval := 5.0
+)
+
+val purpose = "TEST"
+//val purpose = "OPTIMISATION_LOCAL"
+
+val datestr = (new SimpleDateFormat("yyyyMMdd_HHmmss")).format(new Date()).toString
+val resdir = purpose+"_"+datestr
+
+//val env = EGIEnvironment("vo.complex-systems.eu")
+val env = LocalEnvironment(10)
+
+val evolution =
+  NSGA2Evolution(
+    genome =
+      Seq(
+        betaCongestion in Range(-4.0,4.0),
+        betaWaiting in Range(-4.0,4.0)
+      ),
+      mu = 200,
+      objectives = Seq(averageCongestionRer,averageCongestionOthers),
+      evaluation = model,
+      stochastic = Stochastic(seed = replication),
+      termination = 2//50000,
+      //parallelism = 10//,
+      //distribution = Island(10 minutes)
+)
+
+val savePopulation = SavePopulationHook(evolution, workDirectory / "optimisation" / resdir)//,100)
+
+
+(evolution on env hook savePopulation)

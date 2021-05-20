@@ -201,7 +201,7 @@ global:rer-users-arrival-rate
 global:rer-users-arrival-rate
 0
 500
-150.0
+100.0
 10
 1
 NIL
@@ -216,7 +216,7 @@ global:rer-capacity
 global:rer-capacity
 0
 2600
-700.0
+500.0
 100
 1
 NIL
@@ -270,7 +270,7 @@ global:rer-interval
 global:rer-interval
 1
 10
-4.0
+5.0
 1
 1
 NIL
@@ -307,7 +307,7 @@ global:beta-congestion
 global:beta-congestion
 -5
 5
-1.7
+-1.4
 0.1
 1
 NIL
@@ -322,7 +322,7 @@ global:beta-waiting
 global:beta-waiting
 -5
 5
--0.6
+-2.0
 0.1
 1
 NIL
