@@ -35,3 +35,19 @@ for(indic in indicators){
     ggsave(plot = g+geom_point(pch='.')+geom_smooth()+facet_grid(rerCapacity~rerInterval,scales="free")+stdtheme,filename = paste0(resdir,indic,'-betaCongestion_colour-betaWaiting_facet-rerCapacity-rerInterval_arrivalRate-',arrivalRate,'_TARGETED.png'),width=20,height=15,units='cm')
 }
 
+
+########
+## Optimisation
+
+resPrefix = 'OPTIMISATION_LOCAL_20210520_162620'
+res <- as.tbl(read.csv(paste0('optimisation/',resPrefix,'/population1000.csv')))
+resdir = paste0('results/',resPrefix,'/');dir.create(resdir)
+
+ggplot(res[res$evolution.samples>=1,],aes(x=averageCongestionRer,y=averageCongestionOthers,size=betaCongestion,color=betaWaiting))+
+  geom_point(alpha=0.5)+xlab("Average congestion (RER)")+ylab("Average congestion (other modes)")+
+  scale_size_continuous(name=expression(beta[c]))+scale_colour_continuous(name=expression(beta[tau]))
+ggsave(file=paste0(resdir,'pareto-congestions.png'),width=18,height=15,units='cm')
+
+
+
+
