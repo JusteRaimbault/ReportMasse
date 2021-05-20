@@ -45,7 +45,7 @@ val evolution =
         betaWaiting in Range(-4.0,4.0)
       ),
       mu = 200,
-      objectives = Seq(averageCongestionRer,averageCongestionOthers),
+      objective = Seq(averageCongestionRer,averageCongestionOthers),
       evaluation = model,
       stochastic = Stochastic(seed = replication),
       termination = 2//50000,
