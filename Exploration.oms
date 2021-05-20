@@ -43,40 +43,44 @@ val model = NetLogo6Task(workDirectory / "HEADLESS_ReportMasse.nlogo",cmds,embed
     outputs += shareDivertedUsers mapped "indicators:share-diverted-users"
 )
 
-val purpose = "TEST"
+//val purpose = "TEST"
 //val purpose = "GRIDEXPLORATION_GRID"
+val purpose = "GRIDEXPLORATION_CLUSTER"
 
 val resfilename = ((new SimpleDateFormat("yyyyMMdd_HHmmss")).format(new Date()))+"_"+purpose+".csv"
 val indics_hook = CSVHook(workDirectory / "exploration" / resfilename,arrayOnRow=true)
 
 //val env = EGIEnvironment("vo.complex-systems.eu")
-val env = LocalEnvironment(5)
+//val env = LocalEnvironment(5)
+val env = SGEEnvironment(memory = 2 gigabytes, localSubmission = true, wallTime = 30 minutes, workDirectory = "/home/uceejra/Scratch/.tmp")
+
 
 val replications = Replication(
    //evaluation = (model on env by 20 hook indics_hook),
-   evaluation = (model on env hook indics_hook),
+   evaluation = (model on env by 10 hook indics_hook),
    seed = replication,
-   //sample = 20
-   sample = 1
+   sample = 10
+   //sample = 1
 )
 
 val exploration = DirectSampling(
     evaluation = replications,
     sampling =
-      (LHS(5,
+      /*(LHS(5,
         arrivalRate in Range(10.0,200.0),
         rerCapacity in Range(10.0,2000.0),
         rerInterval in Range(2.0,20.0),
         betaCongestion in Range(-2.0,2.0),
         betaWaiting in Range(-2.0,2.0)
-      )
-      /*(
-	   (arrivalRate in (100.0 to 200.0 by 100.0))
-     x (rerCapacity in (10.0 to 2000.0))
-     x (rerInterval in (2.0 to 20.0 by 2.0))
+      )*/
+      (
+	   //(arrivalRate in (100.0 to 200.0 by 100.0))
+     (arrivalRate is 100.0)
+     x (rerCapacity in Seq(500.0,1000.0))
+     x (rerInterval in (3.0 to 5.0 by 1.0))
      x (betaCongestion in (-2.0 to 2.0 by 0.2))
      x (betaWaiting in (-2.0 to 2.0 by 0.2))
-     )*/
+     )
     withIndex id )
 )
 
