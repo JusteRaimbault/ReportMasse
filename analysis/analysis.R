@@ -40,7 +40,7 @@ for(indic in indicators){
 ## Optimisation
 
 resPrefix = 'OPTIMISATION_LOCAL_20210520_162620'
-res <- as.tbl(read.csv(paste0('optimisation/',resPrefix,'/population1000.csv')))
+res <- as.tbl(read.csv(paste0('optimisation/',resPrefix,'/population2000.csv')))
 resdir = paste0('results/',resPrefix,'/');dir.create(resdir)
 
 ggplot(res[res$evolution.samples>=1,],aes(x=averageCongestionRer,y=averageCongestionOthers,size=betaCongestion,color=betaWaiting))+
